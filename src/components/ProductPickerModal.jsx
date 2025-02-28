@@ -1,49 +1,74 @@
-import { useEffect, useState } from "react"
-import { useProducts } from "../context/ProductsContext"
-import { useQuery } from "@tanstack/react-query"
-import { searchProducts } from "../api/productsApi"
-import { Loader, Search, X } from "lucide-react"
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { X, Search, Loader } from 'lucide-react';
+import { searchProducts } from '../api/productsApi';
+import { useProducts } from '../context/ProductsContext';
+import { useQuery } from '@tanstack/react-query';
 
 const ProductPickerModal = ({ isOpen, onClose, selectedProductId }) => {
-
-    const [searchTerm, setSearchTerm] = useState('')
-    const [page, setPage] = useState(1)
-    const [allProducts, setAllProducts] = useState([])
-    const { replaceProduct } = useProducts()
+    const [searchTerm, setSearchTerm] = useState('');
+    const [page, setPage] = useState(1);
+    const [allProducts, setAllProducts] = useState([]);
+    const { replaceProduct } = useProducts();
+    const observerRef = useRef(null);
+    const containerRef = useRef(null);
 
     const { data, isLoading, isFetching, error } = useQuery({
+
         queryKey: ['products', searchTerm, page],
         queryFn: () => searchProducts(searchTerm, page, 10),
         keepPreviousData: true,
-
-    })
+    });
 
     useEffect(() => {
         if (data && !isFetching) {
             if (page === 1) {
-                setAllProducts(data.data)
+                setAllProducts(data.data);
             } else {
-                setAllProducts(prev => [...prev, ...data.data])
+                setAllProducts(prev => [...prev, ...data.data]);
             }
         }
-    }, [data, isFetching, page])
-
+    }, [data, isFetching, page]);
 
     const handleSearch = (e) => {
-        setSearchTerm(e.target.value)
-        setPage(1)
-        setAllProducts([])
-    }
-    const handleSelectProduct = (product) => {
-        replaceProduct(selectedProductId, product)
-        onClose()
-    }
+        setSearchTerm(e.target.value);
+        setPage(1);
+        setAllProducts([]);
+    };
 
+    const handleSelectProduct = (product) => {
+        replaceProduct(selectedProductId, product);
+        onClose();
+    };
+
+    const lastProductElementRef = useCallback(node => {
+        if (isLoading || isFetching) return;
+        if (observerRef.current) observerRef.current.disconnect();
+
+        observerRef.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && data && data.page * data.limit < data.total) {
+                setPage(prevPage => prevPage + 1);
+            }
+        });
+
+        if (node) observerRef.current.observe(node);
+    }, [isLoading, isFetching, data]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setSearchTerm('');
+            setPage(1);
+            setAllProducts([]);
+        }
+    }, [isOpen]);
+
+    if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-
+            <div
+                className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+                ref={containerRef}
+            >
                 <div className="flex justify-between items-center p-4 border-b">
                     <h2 className="text-xl font-semibold">Select a Product</h2>
                     <button
@@ -135,7 +160,7 @@ const ProductPickerModal = ({ isOpen, onClose, selectedProductId }) => {
                 </div>
             </div>
         </div>
-    )
+    );
+};
 
-}
-export default ProductPickerModal
+export default ProductPickerModal;

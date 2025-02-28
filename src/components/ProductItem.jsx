@@ -1,79 +1,128 @@
-import { GripVertical } from "lucide-react"
-import { useState } from "react"
+import React, { useRef, useState } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
+import { Trash2, DollarSign, Percent, GripVertical, RefreshCw } from 'lucide-react';
+import { useProducts } from '../context/ProductsContext';
 
-const ProductItem = ({ product, index }) => {
-    const [isEditingName, setIsEditingName] = useState(false)
-    const [isEditingPrice, setIsEditingPrice] = useState(false)
-    const [isApplyingDiscount, setIsApplyingDiscount] = useState(false)
-    const [discountType, setDiscountType] = useState('flat')
-    const [discountValue, setDiscountValue] = useState(0)
+const ProductItem = ({ product, index, onOpenModal }) => {
+    const { removeProduct, updateProduct, moveProduct, applyDiscount } = useProducts();
+    const ref = useRef(null);
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [isEditingPrice, setIsEditingPrice] = useState(false);
+    const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
+    const [discountType, setDiscountType] = useState('flat');
+    const [discountValue, setDiscountValue] = useState(0);
+
+    const [{ isDragging }, drag] = useDrag({
+        type: 'PRODUCT',
+        item: { index, id: product.id, type: 'PRODUCT' },
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+    });
+
+    const [, drop] = useDrop({
+        accept: 'PRODUCT',
+        hover(item, monitor) {
+            if (!ref.current) {
+                return;
+            }
+            const dragIndex = item.index;
+            const hoverIndex = index;
+
+            if (dragIndex === hoverIndex) {
+                return;
+            }
+
+            const hoverBoundingRect = ref.current?.getBoundingClientRect();
+            const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+            const clientOffset = monitor.getClientOffset();
+            const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+            if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+                return;
+            }
+
+            if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+                return;
+            }
+
+            moveProduct(dragIndex, hoverIndex);
+            item.index = hoverIndex;
+        },
+    });
+
+    drag(drop(ref));
 
     const handleNameChange = (e) => {
-        updateProduct(product.id, { name: e.target.value })
-    }
+        updateProduct(product.id, { name: e.target.value });
+    };
 
     const handlePriceChange = (e) => {
-        const price = parseFloat(e.target.value)
+        const price = parseFloat(e.target.value);
         if (!isNaN(price)) {
-            updateProduct(product.id, { price })
+            updateProduct(product.id, { price });
         }
-    }
+    };
 
     const handleApplyDiscount = () => {
-        const value = parseFloat(discountValue)
+        const value = parseFloat(discountValue);
         if (!isNaN(value) && value > 0) {
             applyDiscount(product.id, discountType, value);
-            setIsApplyingDiscount(false)
+            setIsApplyingDiscount(false);
         }
-    }
+    };
 
     const calculateFinalPrice = () => {
-        if (!product.discount) {
-            return product.price
+        if (!product.discount) return product.price;
 
-        }
         if (product.discount.type === 'flat') {
-            return Math.max(0, product.price - product.discount.value)
+            return Math.max(0, product.price - product.discount.value);
         } else {
-            return product.price * (1 - product.discount.value / 100)
+            return product.price * (1 - product.discount.value / 100);
         }
-
-    }
+    };
 
     return (
-        <div>
+        <div
+            ref={ref}
+            className={`bg-white rounded-lg shadow-md p-4 mb-4 flex items-start gap-4 ${isDragging ? 'opacity-50' : 'opacity-100'
+                }`}
+        >
             <div className="cursor-move flex items-center h-full pt-2">
                 <GripVertical size={20} className="text-gray-400" />
             </div>
+
             <div className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
                 <img
-                    src=""
-                    alt=""
+                    src={product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80'}
+                    alt={product.name}
                     className="w-full h-full object-cover"
                 />
             </div>
 
             <div className="flex-grow">
                 {isEditingName ? (
-
-                    <Input
+                    <input
                         type="text"
-                        placeholder="Product name"
                         value={product.name}
-                        className="w-full p-2 border rounded mb-2"
                         onChange={handleNameChange}
                         onBlur={() => setIsEditingName(false)}
+                        autoFocus
+                        className="w-full p-2 border rounded mb-2"
+                        placeholder="Product name"
                     />
                 ) : (
                     <div
-                        className="font-semibold text-lg mb-2 cursor-pointer hover:text-blue-600" onClick={() => setIsEditingName(true)}
+                        className="font-semibold text-lg mb-2 cursor-pointer hover:text-blue-600"
+                        onClick={() => setIsEditingName(true)}
                     >
-                        {product.name}
+                        {product.name || 'Unnamed Product'}
                     </div>
                 )}
+
                 <div className="flex items-center gap-2 mb-2">
                     {isEditingPrice ? (
-                        <Input
+                        <input
                             type="number"
                             value={product.price}
                             onChange={handlePriceChange}
@@ -99,12 +148,14 @@ const ProductItem = ({ product, index }) => {
                                 : `-${product.discount.value}%`}
                         </div>
                     )}
+
                     {product.discount && (
                         <div className="text-sm font-semibold">
-                            ${product.price.toFixed(2)}
+                            = ${calculateFinalPrice().toFixed(2)}
                         </div>
                     )}
                 </div>
+
                 {isApplyingDiscount && (
                     <div className="flex items-center gap-2 mb-3">
                         <select
@@ -139,7 +190,6 @@ const ProductItem = ({ product, index }) => {
                 )}
             </div>
 
-
             <div className="flex flex-col gap-2">
                 <button
                     onClick={() => onOpenModal(product.id)}
@@ -164,6 +214,7 @@ const ProductItem = ({ product, index }) => {
                 </button>
             </div>
         </div>
-    )
-}
-export default ProductItem
+    );
+};
+
+export default ProductItem;

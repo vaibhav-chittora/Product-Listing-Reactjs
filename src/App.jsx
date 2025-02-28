@@ -5,6 +5,9 @@ import ProductPickerModal from './components/ProductPickerModal'
 import { ProductsProvider, useProducts } from './context/ProductsContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Plus, ShoppingBag } from 'lucide-react'
+import { DndProvider } from 'react-dnd'
+import { HTML } from 'react-dnd-html5-backend/dist/NativeTypes'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 
 
 const queryClient = new QueryClient()
@@ -68,9 +71,11 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ProductsProvider>
-        <AppContent />
-      </ProductsProvider>
+      <DndProvider backend={HTML5Backend}>
+        <ProductsProvider>
+          <AppContent />
+        </ProductsProvider>
+      </DndProvider>
     </QueryClientProvider>
   )
 }

@@ -7,7 +7,7 @@ export const searchProducts = async (search = "", page = 1, limit = 10) => {
       `${API_BASE_URL}/search?search=${search}&page=${page}&limit=${limit}`,
       {
         headers: {
-          "x-api-key": "72njgfa948d9aS7gs5",
+          "x-api-key": `${import.meta.env.VITE_API_KEY}`,
         },
       }
     );
