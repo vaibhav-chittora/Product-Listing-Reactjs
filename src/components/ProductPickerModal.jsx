@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { useProducts } from "../context/ProductsContext"
 import { useQuery } from "@tanstack/react-query"
 import { searchProducts } from "../api/productsApi"
-import { Search, X } from "lucide-react"
+import { Loader, Search, X } from "lucide-react"
 
 const ProductPickerModal = ({ isOpen, onClose, selectedProductId }) => {
 
@@ -12,8 +12,8 @@ const ProductPickerModal = ({ isOpen, onClose, selectedProductId }) => {
     const { replaceProduct } = useProducts()
 
     const { data, isLoading, isFetching, error } = useQuery({
-        queryKey: ['products', searchItem, page],
-        queryFn: () => searchProducts(searchItem, page, 10),
+        queryKey: ['products', searchTerm, page],
+        queryFn: () => searchProducts(searchTerm, page, 10),
         keepPreviousData: true,
 
     })
