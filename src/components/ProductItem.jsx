@@ -1,4 +1,5 @@
 import { GripVertical } from "lucide-react"
+import { useState } from "react"
 
 const ProductItem = ({ product, index }) => {
     const [isEditingName, setIsEditingName] = useState(false)
