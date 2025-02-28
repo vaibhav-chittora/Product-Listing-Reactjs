@@ -1,4 +1,5 @@
 import { useProducts } from "../context/ProductsContext"
+import ProductItem from "./ProductItem"
 
 const ProductList = () => {
 
@@ -10,13 +11,12 @@ const ProductList = () => {
                     <p className="text-gray-500">No products added yet. Click the "Add Product" button to get started.</p>
                 </div>) : (
                 products.map((product, index) => {
-                    return (
-                        <div>
-                            <p>{product.name}</p>
-                            <p>{product.price}</p>
-                            <p>{product.description}</p>
-                        </div>
-                    )
+                    <ProductItem
+                        key={product.id}
+                        product={product}
+                        index={index}
+
+                    />
                 })
             )
             }
