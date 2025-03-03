@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { searchProducts } from '../api/productsApi';
 
 const ProductsContext = createContext(undefined);
 
@@ -14,14 +15,10 @@ export const useProducts = () => {
 export const ProductsProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
 
-    const addProduct = () => {
-        const newProduct = {
-            id: uuidv4(),
-            name: '',
-            price: 0,
-            image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80',
-        };
-        setProducts([...products, newProduct]);
+    const addProduct = async () => {
+        const newProduct = await searchProducts('', 1, 10)
+        console.log("newProduct data- ", newProduct);
+        setProducts(newProduct.map(product => ({ ...product, id: uuidv4() })));
     };
 
     const removeProduct = (id) => {

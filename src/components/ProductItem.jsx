@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import { Trash2, DollarSign, Percent, GripVertical, RefreshCw } from 'lucide-react';
+import { Trash2, Percent, GripVertical, IndianRupee } from 'lucide-react';
 import { useProducts } from '../context/ProductsContext';
+import { searchProducts } from '../api/productsApi';
+import VariantsAccordion from './VariantsAccordion';
 
 const ProductItem = ({ product, index, onOpenModal }) => {
     const { removeProduct, updateProduct, moveProduct, applyDiscount } = useProducts();
@@ -11,6 +13,7 @@ const ProductItem = ({ product, index, onOpenModal }) => {
     const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
     const [discountType, setDiscountType] = useState('flat');
     const [discountValue, setDiscountValue] = useState(0);
+    const [variants, setVariants] = useState([]);
 
     const [{ isDragging }, drag] = useDrag({
         type: 'PRODUCT',
@@ -82,6 +85,15 @@ const ProductItem = ({ product, index, onOpenModal }) => {
         }
     };
 
+
+    const handleShowVariants = async () => {
+        const variants = await searchProducts(product.title, 1, 10);
+        console.log('Variants:', variants);
+        setVariants(variants);
+        // onOpenModal();
+
+    };
+
     return (
         <div
             ref={ref}
@@ -94,8 +106,8 @@ const ProductItem = ({ product, index, onOpenModal }) => {
 
             <div className="w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
                 <img
-                    src={product.image || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80'}
-                    alt={product.name}
+                    src={product.image}
+                    alt={`No Image available`}
                     className="w-full h-full object-cover"
                 />
             </div>
@@ -116,7 +128,7 @@ const ProductItem = ({ product, index, onOpenModal }) => {
                         className="font-semibold text-lg mb-2 cursor-pointer hover:text-blue-600"
                         onClick={() => setIsEditingName(true)}
                     >
-                        {product.name || 'Unnamed Product'}
+                        {product.title}
                     </div>
                 )}
 
@@ -137,23 +149,23 @@ const ProductItem = ({ product, index, onOpenModal }) => {
                             className="cursor-pointer hover:text-blue-600"
                             onClick={() => setIsEditingPrice(true)}
                         >
-                            ${product.price.toFixed(2)}
+                            {/* ${product.toFixed(2)} */}
                         </div>
                     )}
 
                     {product.discount && (
-                        <div className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
+                        <div className=" bg-green-100 text-green-800 px-2 py-1 rounded text-l">
                             {product.discount.type === 'flat'
-                                ? `-$${product.discount.value.toFixed(2)}`
-                                : `-${product.discount.value}%`}
+                                ? `₹${product.discount.value.toFixed(2)} discount`
+                                : `${product.discount.value}% off`}
                         </div>
                     )}
 
-                    {product.discount && (
-                        <div className="text-sm font-semibold">
-                            = ${calculateFinalPrice().toFixed(2)}
-                        </div>
-                    )}
+                    {/* {product.discount && (
+                        // <div className="text-sm font-semibold">
+                        //     = ₹{calculateFinalPrice()}
+                        // </div>
+                    )} */}
                 </div>
 
                 {isApplyingDiscount && (
@@ -163,20 +175,20 @@ const ProductItem = ({ product, index, onOpenModal }) => {
                             onChange={(e) => setDiscountType(e.target.value)}
                             className="p-2 border rounded"
                         >
-                            <option value="flat">Flat ($)</option>
+                            <option value="flat">Flat (₹)</option>
                             <option value="percentage">Percentage (%)</option>
                         </select>
                         <input
-                            type="number"
+                            type="phone"
                             value={discountValue}
                             onChange={(e) => setDiscountValue(e.target.value)}
                             className="w-20 p-2 border rounded"
                             min="0"
-                            step={discountType === 'flat' ? '0.01' : '1'}
+                            step={discountType === 'flat'}
                         />
                         <button
                             onClick={handleApplyDiscount}
-                            className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600"
+                            className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 cursor-pointer "
                         >
                             Apply
                         </button>
@@ -191,19 +203,19 @@ const ProductItem = ({ product, index, onOpenModal }) => {
             </div>
 
             <div className="flex flex-col gap-2">
-                <button
+                {/* <button
                     onClick={() => onOpenModal(product.id)}
                     className="p-2 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"
                     title="Replace product"
                 >
                     <RefreshCw size={18} />
-                </button>
+                </button> */}
                 <button
                     onClick={() => setIsApplyingDiscount(true)}
                     className="p-2 bg-green-100 text-green-600 rounded hover:bg-green-200"
                     title="Apply discount"
                 >
-                    {discountType === 'flat' ? <DollarSign size={18} /> : <Percent size={18} />}
+                    {discountType === 'flat' ? <IndianRupee size={18} /> : <Percent size={18} />}
                 </button>
                 <button
                     onClick={() => removeProduct(product.id)}
@@ -212,6 +224,17 @@ const ProductItem = ({ product, index, onOpenModal }) => {
                 >
                     <Trash2 size={18} />
                 </button>
+
+                {/* button to show variants */}
+                {/* <button
+                    onClick={handleShowVariants}
+                    className='p-2 bg-yellow-100 text-yellow-600 rounded hover:bg-yellow-200'
+                    title='Show Variants'
+                >
+                    <SquareArrowDown size={18} />
+                </button> */}
+                {variants.length > 0 || <VariantsAccordion productTitle={product.title} />}
+
             </div>
         </div>
     );
