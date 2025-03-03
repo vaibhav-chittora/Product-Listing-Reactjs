@@ -2,9 +2,9 @@
 
 This project is a **Product Management Application** built using **React.js**. It allows users to search, add, remove, update, and manage products efficiently. The app also supports **pagination, drag-and-drop sorting, and discount calculation**.
 
-## Live Demo
+## [Live Demo](https://product-listing-reactjs.vercel.app/)
 
-🔗 [Live Link](https://your-live-link.com)
+🔗 [Live Link](https://product-listing-reactjs.vercel.app/)
 
 ## Application Preview 📸
 
