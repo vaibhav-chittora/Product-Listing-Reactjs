@@ -116,7 +116,7 @@ const ProductItem = ({ product, index, onOpenModal }) => {
                 {isEditingName ? (
                     <input
                         type="text"
-                        value={product.name}
+                        value={product.title}
                         onChange={handleNameChange}
                         onBlur={() => setIsEditingName(false)}
                         autoFocus

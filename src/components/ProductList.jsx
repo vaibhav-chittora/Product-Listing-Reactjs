@@ -8,12 +8,12 @@ import { Loader } from 'lucide-react';
 const ProductList = ({ onOpenModal }) => {
     const { products, setProducts } = useProducts();
     const [page, setPage] = useState(1);
-    const limit = 5;
+    const limit = 10;
 
     const { data, isLoading, isError, error } = useQuery({
         queryKey: ['products', page, limit],
         queryFn: () => searchProducts('', page, limit),
-        keepPreviousData: true,  // Ye previous data ko retain karega taaki transition smooth ho
+        keepPreviousData: true,
     });
 
     // 🛠 Update products when new data is fetched
